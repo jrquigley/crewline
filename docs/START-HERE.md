@@ -17,7 +17,7 @@ A web-server application for irregular Event-based scheduling across departments
 
 Production authentication/authorization, shared database, secure session revocation, scheduling APIs, durable audit history, actual emails, queued jobs, a weekly delivery scheduler, personal calendar feeds, live external Event ingestion, production infrastructure and an approved license. Browser sample data is not a database. The preview interface switch is not role-based security.
 
-The owner supplied [jrquigley/gig](https://github.com/jrquigley/gig) on November 5, 2026. It was verified private and empty, and the authenticated account has admin access. The canonical local checkout is now `outputs/gig` in the original workspace; `outputs/crewline` and its archive are the earlier delivery snapshot. The initial import is being prepared on `main`. No production deployment exists.
+The owner supplied [jrquigley/gig](https://github.com/jrquigley/gig) on November 5, 2026. It was verified private and empty, and the authenticated account has admin access. The canonical local checkout is now `outputs/gig` in the original workspace; `outputs/crewline` and its archive are the earlier delivery snapshot. The initial import is on `main` at `5d97d5ad4acb3bd9c8388a839a6bb2bfe35b1e03`; [GitHub CI passed](https://github.com/jrquigley/gig/actions/runs/42096161232). Subsequent development uses task branches and PRs. No production deployment exists.
 
 ## Reading order
 

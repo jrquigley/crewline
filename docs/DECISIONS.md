@@ -76,3 +76,8 @@ Do not turn all open questions into an immediate questionnaire. Resolve only tho
 ## D-013 — Initial empty-repository bootstrap
 
 **State:** accepted implementation choice for CL-010, November 5, 2026. The owner supplied a verified empty private repository and requested the prepared project be posted to GitHub. Import the reviewed starter as the first `main` baseline, without overwriting any existing history, then use task branches and PRs for subsequent work. Keep repository visibility and the owner-supplied repository name unchanged. Use the verified account login with its GitHub no-reply address for this commit because no Git author identity is configured; do not change global Git configuration. Production architecture, hosting and license decisions remain open.
+
+
+## D-014 — Verified connected source checkpoint
+
+**State:** completed CL-010 checkpoint, November 5, 2026. Canonical source is the private owner-supplied repository `https://github.com/jrquigley/gig`; default branch `main`. Initial source commit `5d97d5ad4acb3bd9c8388a839a6bb2bfe35b1e03` was pushed successfully, and the first Preview checks GitHub workflow passed. Local application build, 9 Node tests and browser smoke passed before upload. The historical standalone delivery remains in `outputs/crewline`; continue development in the connected checkout `outputs/gig` or a clean clone/worktree. No repository visibility, licensing, branch-protection or production-host settings were changed. Production choices remain open and CL-101 is next.

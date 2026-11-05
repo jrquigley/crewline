@@ -41,7 +41,7 @@ Tasks in one milestone may depend on a later-numbered task where a shared contra
 
 | ID | State | Depends on | Deliverable / acceptance |
 | --- | --- | --- | --- |
-| CL-010 | in-progress; Codex; main bootstrap | Owner GitHub account | Create/select repository, choose visibility and licensing, authenticate local Git, push first reviewed checkpoint; record URL, branch and commit; never commit credentials |
+| CL-010 | done; Codex | Owner GitHub account | Owner-supplied private repository connected, initial `main` import pushed, local checks and GitHub CI passed; checkpoint in HANDOFF/WORKLOG; no license grant selected |
 | CL-011 | planned | CL-010 | Branch protection, required checks, PR/issue workflow and paired-agent ownership; verify permissions; first clean-checkout handoff succeeds |
 | CL-101 | ready | CL-004 | Resolve minimum architecture decisions: hosting environment, first deployment scale, auth approach and application framework; record accepted ADR and implementation layout |
 | CL-102 | planned | CL-101 | Scaffold the production application with type checks, formatting, configuration validation and error boundaries; keep prototype runnable as reference |
@@ -168,9 +168,9 @@ All relevant requirements traced to tests; no real data in fixtures; code and do
 
 ## Next work queue
 
-1. CL-010: owner supplied `https://github.com/jrquigley/gig`; private empty repository and authenticated admin access verified. Codex is importing the initial checkpoint on `main`; push and remote CI verification are in progress.
+1. CL-010 is complete: `https://github.com/jrquigley/gig`, private, initial import on `main`, GitHub CI passed. See WORKLOG for commit/run evidence. CL-011 remains planned for branch protection and collaboration hardening.
 2. CL-101: decide the production stack and deployment target; translate the architecture proposal into an accepted ADR and scaffold task.
 3. CL-102–105: build a reproducible application/database/worker foundation.
 4. CL-205 + CL-201–204: establish identity, scope and people data before real scheduling writes.
 
-The first two can proceed independently. Repository creation is not a reason to stop local design or documentation work.
+Next ready implementation task: CL-101. CL-011 can be addressed independently once repository policy is chosen. A second-agent review has not been performed.

@@ -2,7 +2,7 @@
 
 ## Current facts
 
-The owner supplied [jrquigley/gig](https://github.com/jrquigley/gig) on November 5, 2026. Verified: private repository, initially empty, authenticated GitHub account `jrquigley`, admin permission. Authentication works in the normal Windows account context; the sandbox could not read CLI config or use Windows HTTPS credentials even after a scoped permission grant. No need to create another repository or log in again. The initial project import is in progress.
+The owner supplied [jrquigley/gig](https://github.com/jrquigley/gig) on November 5, 2026. Verified: private repository, initially empty, authenticated GitHub account `jrquigley`, admin permission. Authentication works in the normal Windows account context; the sandbox could not read CLI config or use Windows HTTPS credentials even after a scoped permission grant. No need to create another repository or log in again. The starter was pushed to `main` at `5d97d5ad4acb3bd9c8388a839a6bb2bfe35b1e03`; [initial GitHub CI passed](https://github.com/jrquigley/gig/actions/runs/42096161232). No additional sign-in or new repository is needed on this workstation when the authorized account context is available.
 
 Agents do not have a separate GitHub identity that you need to add as a collaborator for local development. They operate in the local checkout using the tools and Git authentication available to the session. A different computer or cloud-hosted agent needs its own authorized connection to the same repository.
 

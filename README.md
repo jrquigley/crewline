@@ -1,5 +1,7 @@
 # Crewline
 
+Source repository: [jrquigley/gig](https://github.com/jrquigley/gig) · Private · [Resume / handoff](docs/HANDOFF.md)
+
 Event-based staff scheduling for multiple departments and locations. The staff experience is intentionally simple and designed for a phone browser; administration is designed primarily for desktop and laptop browsers.
 
 **Current release: 0.1.0 — interactive interface preview, local preview web server, and implementation plan.** There is no production database, authentication service, email delivery, calendar connector, or deployed website yet. All people and Events are sample data. Changes reset when the standalone preview is refreshed.
@@ -47,10 +49,10 @@ Codex should read [AGENTS.md](AGENTS.md). Claude should read [CLAUDE.md](CLAUDE.
 - `server/index.mjs`: Node HTTP server serving only the public preview and health endpoint.
 - `tests/preview.test.mjs`: dependency-free server, script syntax, terminology and documentation-link checks.
 - `scripts/browser-smoke.cjs`: optional interaction and responsive-layout checks; requires Playwright separately.
-- `.github/workflows/preview-checks.yml`: prepared CI definition. It has not run on GitHub yet.
+- `.github/workflows/preview-checks.yml`: GitHub CI for the default preview suite; [initial run passed](https://github.com/jrquigley/gig/actions/runs/42096161232). Latest checkpoint details are in WORKLOG.md.
 
 ## Hosting and ownership
 
 GitHub will store and coordinate the source. A production scheduling service also needs an application host, database, worker/scheduler and external providers. GitHub Pages is a static hosting product and does not run this project's future server-side services. See [Deployment](docs/DEPLOYMENT.md).
 
-The owner-created source repository is [jrquigley/gig](https://github.com/jrquigley/gig), verified private on November 5, 2026. Application terminology remains Event; Crewline is the working product name. The initial import is being prepared on `main`. No production deployment or license grant has been made. Keep real staff data and credentials out of the repository.
+The owner-created source repository is [jrquigley/gig](https://github.com/jrquigley/gig), verified private on November 5, 2026. Application terminology remains Event; Crewline is the working product name. The initial starter and shared documentation were imported on `main`; subsequent changes use task branches and PRs. No production deployment or license grant has been made. Keep real staff data and credentials out of the repository.

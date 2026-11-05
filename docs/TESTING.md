@@ -54,7 +54,7 @@ This is Chromium/Edge automation, not evidence of actual iPhone/Android calendar
 
 See [Work log](WORKLOG.md) for executed commands and outcomes. Record the exact test environment and whether a check ran locally or in GitHub CI. A workflow file in `.github` is prepared configuration; it is not evidence that GitHub ran it.
 
-At the packaged checkpoint: build freshness passed; all 9 Node tests passed; the optional browser smoke suite passed on installed Microsoft Edge, including 24 responsive combinations and no JavaScript exceptions. Node version was v24.22.1. npm was not exposed on PATH in the Codex shell, so direct Node equivalents were executed. Remote CI, real phones, real calendar providers and production-service tests have not run.
+At the packaged checkpoint: build freshness passed; all 9 Node tests passed; the optional browser smoke suite passed on installed Microsoft Edge, including 24 responsive combinations and no JavaScript exceptions. Node version was v24.22.1. npm was not exposed on PATH in the Codex shell, so direct Node equivalents were executed. At the November 5 repository connection checkpoint, [GitHub CI passed](https://github.com/jrquigley/gig/actions/runs/42096161232) for initial commit `5d97d5ad4acb3bd9c8388a839a6bb2bfe35b1e03`. Real phones, real calendar providers and production-service tests remain unrun. Browser smoke was run locally with installed Edge, not in the default GitHub workflow.
 
 ## Mandatory production test categories
 

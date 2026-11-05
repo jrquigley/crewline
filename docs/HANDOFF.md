@@ -1,19 +1,21 @@
 # Current handoff — resume here
 
-**Author:** Codex. **Checkpoint:** initial repository-ready starter preparation, following the interactive prototype. Dates: November 4–5, 2026, America/Los_Angeles; source sample week remains November 2–8.
+**Author:** Codex. **Checkpoint:** November 5, 2026, America/Los_Angeles — GitHub import completed; production foundation is next. Source sample week remains November 2–8.
+
+**Source:** [jrquigley/gig](https://github.com/jrquigley/gig), private. **Default branch:** `main`. **Verified initial application checkpoint:** `5d97d5ad4acb3bd9c8388a839a6bb2bfe35b1e03`. **Initial CI:** [passed](https://github.com/jrquigley/gig/actions/runs/42096161232). The follow-up task branch `codex/CL-010-repository-handoff` records this evidence; inspect current Git history for its merge and latest HEAD rather than assuming this initial SHA is still the tip.
 
 ## Actual state
 
 The interactive manager/staff reference is preserved and now uses Event terminology throughout. A standalone generated document and dependency-free Node preview server are packaged with shared project documentation and prepared GitHub CI. This is a web-server starter for reviewing the interface; production application services remain unimplemented.
 
-The owner supplied `https://github.com/jrquigley/gig`. On November 5, 2026, Codex verified that it was private and empty and authenticated GitHub access has admin permission. The canonical checkout is now `C:\Users\jrqui\Documents\Codex\2026-11-04\i-n\outputs\gig`, branch `main`, with origin set to that repository. The initial import/remote CI check is in progress. There is no deployment. The prior `outputs/crewline` folder and ZIP remain historical pre-connection snapshots.
+The owner supplied `https://github.com/jrquigley/gig`. On November 5, 2026, Codex verified that it was private and empty and authenticated GitHub access has admin permission. The canonical checkout is now `C:\Users\jrqui\Documents\Codex\2026-11-04\i-n\outputs\gig`, branch `main`, with origin set to that repository. The starter was committed and pushed to `origin/main`; the first GitHub preview CI run completed successfully. There is no deployment. The prior `outputs/crewline` folder and ZIP remain historical pre-connection snapshots.
 
 ## Start in this order
 
 1. Read AGENTS.md and docs/START-HERE.md; inspect the latest WORKLOG and ROADMAP rather than relying on the chat.
 2. Inspect actual files/Git state. If now inside a repository, record `git status --short --branch`, remote, HEAD and uncommitted changes; the state may have changed since this handoff.
 3. Run `npm run build` and `npm test`. Run optional browser smoke only with available Playwright/browser; setup and limitations are in TESTING.md.
-4. Verify the CL-010 import and CI checkpoint in the latest WORKLOG. The repository already exists; do not create another or change visibility. Use `git fetch`/`git status` and the remote CI result to establish current state.
+4. CL-010 is complete. Verify the import and CI checkpoint in the latest WORKLOG. The repository already exists; do not create another or change visibility. Use `git fetch`/`git status` and the remote CI result to establish current state.
 5. Claim **CL-101** for the production foundation decision. Review the open questions in DECISIONS.md. Ask only what is necessary: hosting environment, existing stack/auth requirements, initial scale and single-organization vs multi-tenant intent. Continue independent local planning while waiting.
 6. Record accepted technical decisions, then implement CL-102–105 with proper database/auth foundations. Preserve the preview as an executable design reference during migration.
 
@@ -28,7 +30,7 @@ The owner supplied `https://github.com/jrquigley/gig`. On November 5, 2026, Code
 
 ## Validation checkpoint
 
-Build freshness and all 9 Node tests passed. The optional Microsoft Edge browser suite passed, including simulated offboarding/history and 24 responsive combinations with no JavaScript exceptions. npm was not on PATH in the current shell; direct Node commands were used. Exact results are recorded in WORKLOG.md. Re-run checks in the next checkout. Prepared GitHub CI has not run remotely. Browser evidence does not prove backend security.
+Build freshness and all 9 Node tests passed. The optional Microsoft Edge browser suite passed, including simulated offboarding/history and 24 responsive combinations with no JavaScript exceptions. npm was not on PATH in the current shell; direct Node commands were used. Exact results are recorded in WORKLOG.md. Re-run checks in the next checkout. The initial GitHub CI run also passed; the documentation follow-up PR has its own checks. Browser evidence does not prove backend security.
 
 ## Outstanding limitations / do not misrepresent
 
@@ -41,7 +43,7 @@ Build freshness and all 9 Node tests passed. The optional Microsoft Edge browser
 
 ## Suggested next ownership
 
-CL-010: Codex is completing the initial import and remote CI verification. CL-101: next available agent, unassigned. Once schema/API contracts are accepted, one agent may build server/domain services while the other implements staff/manager screens against those contracts, in separate branches/worktrees. Either agent can switch roles.
+CL-010: completed by Codex with an initial source import and passing remote CI. CL-101: next available agent, unassigned. CL-011 branch protections and collaboration policy remain planned; repository settings were not changed. Once schema/API contracts are accepted, one agent may build server/domain services while the other implements staff/manager screens against those contracts, in separate branches/worktrees. Either agent can switch roles.
 
 ## How to leave the next handoff
 
