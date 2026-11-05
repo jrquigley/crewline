@@ -80,3 +80,12 @@ Cloned the empty repository into `outputs/gig` and copied the 27-file prepared s
 No Git author identity was configured, so the initial commit will use the verified account login and standard GitHub no-reply address via per-command settings, without changing global Git configuration. Sandbox ownership differs from the user checkout; run Git in the authorized normal account context instead of adding a global safe-directory exception.
 
 Pre-import validation in the connected checkout passed: `node scripts/build-preview.mjs --check`, all 9 Node tests, and the Microsoft Edge browser smoke suite including 24 responsive combinations with no runtime exceptions. First push, commit checkpoint and remote CI results will be recorded after completion. Production implementation remains unstarted; CL-101 is the next design/foundation task.
+
+
+### CL-010 verified import checkpoint
+
+Initial project commit: `5d97d5ad4acb3bd9c8388a839a6bb2bfe35b1e03` (`Add Event scheduling preview and shared implementation roadmap`), pushed to private `origin/main`. GitHub default branch confirmed `main`. Initial remote [Preview checks run](https://github.com/jrquigley/gig/actions/runs/42096161232) completed with conclusion **success**. Root content was verified through GitHub's repository API.
+
+The local pre-push build freshness, all 9 Node tests and browser smoke/24 responsive combinations passed. No application behavior changed during connection. Author/committer identity used the verified account `jrquigley` and GitHub no-reply address via per-command Git settings; no global author or safe-directory settings were changed.
+
+Post-import handoff updates are on `codex/CL-010-repository-handoff` for a documentation PR, following the shared process. They replace stale no-repository/unverified-CI statements in the current-state documents, mark CL-010 complete, and identify CL-101 as the next ready task. The original preparatory entries above remain an accurate historical record. Review and CI results for the documentation PR are visible in GitHub; no human or Claude review is claimed. No production deployment, actual staff communication, permission-setting change or license grant occurred.
