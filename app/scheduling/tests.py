@@ -118,6 +118,23 @@ class AppTests(TestCase):
         s=self.event.shifts.first();svc.assign(s.pk,self.admin,1,None,s.starts,s.ends)
         with self.assertRaises(ValidationError): svc.assign(s.pk,self.admin,1,self.people[0],s.starts,s.ends)
         with self.assertRaises(ValidationError): svc.publish(self.event.pk,self.admin,1)
+    def test_leave_updates_snapshot_without_marking_unrelated_draft_published(self):
+        self.publish();self.event.refresh_from_db();self.event.name='Private draft title';self.event.version+=1;self.event.save()
+        day=self.event.starts.astimezone(ZoneInfo(self.w.timezone)).date()
+        leave=TimeOff.objects.create(employee=self.people[0],first_day=day,last_day=day)
+        svc.decide_leave(leave.pk,self.admin,True);self.event.refresh_from_db()
+        self.assertTrue(self.event.dirty);self.assertEqual(self.event.published_snapshot['name'],'Evening performance')
+        job=Outbox.objects.filter(user=self.people[0].user,key__startswith='event:').last()
+        body=svc.cipher().decrypt(job.body.encode()).decode()
+        self.assertNotIn('Private draft title',body);self.assertIn('Previously:',body)
+        self.publish();self.event.refresh_from_db();self.assertFalse(self.event.dirty)
+        self.assertEqual(self.event.published_snapshot['name'],'Private draft title')
+    def test_termination_preserves_unrelated_draft_publication_work(self):
+        self.publish();self.event.refresh_from_db();self.event.name='Private draft title';self.event.version+=1;self.event.save()
+        svc.terminate(self.people[0].pk,self.admin);self.event.refresh_from_db()
+        self.assertTrue(self.event.dirty);self.assertEqual(self.event.published_snapshot['name'],'Evening performance')
+        self.assertIsNone(self.event.published_snapshot['shifts'][0]['employee'])
+        self.publish();self.event.refresh_from_db();self.assertEqual(self.event.published_snapshot['name'],'Private draft title')
     def test_skill_location_department_checks(self):
         s=self.event.shifts.first();p=self.people[0];p.skills.clear();self.assertIn('Needs Guest welcome',svc.eligibility(p,s))
         p.locations.clear();p.departments.clear();r=svc.eligibility(p,s);self.assertIn('Different location',r);self.assertIn('Different department',r)

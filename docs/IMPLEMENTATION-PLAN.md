@@ -25,3 +25,8 @@ Active owner: Codex. Branch: `codex/CL-101-authenticated-app`. The owner supplie
 7. Delivery: update roadmap/decisions/work log/handoff and Docker runbook, push the release through a PR, verify CI and merge to main. Report exact reload commands, configuration prerequisites and any limits.
 
 No production server credentials were provided. Do not claim to have reloaded the owner's container or verified public HTTPS until actually observed. Docker reload must retain the `/data` volume.
+
+
+## Implementation checkpoint
+
+Steps 1–5 are implemented with stated roadmap limits. Step 6 passed locally (56 Django tests, complete browser/axe and dependency audit) and on a6a4ed6 in GitHub Docker/UID/browser/persistence checks. Subsequent targeted-publication hardening is under the same full CI gate. Step 7 is in progress through release PR 1; see WORKLOG for final run evidence. Owner production reload and live provider/device acceptance remain separate.

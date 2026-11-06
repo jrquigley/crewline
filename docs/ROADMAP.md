@@ -47,7 +47,7 @@ Tasks in one milestone may depend on a later-numbered task where a shared contra
 | CL-102 | done; Codex | CL-101 | Django application, pinned dependencies, validated configuration, server forms, styled error boundaries and tests; Python compile/check tooling replaces a TypeScript typecheck; keep prototype runnable as reference |
 | CL-103 | done; Codex | CL-102 | SQLite schema migrations and synthetic fixtures (D-016; PostgreSQL deferred); clean database bootstrap and upgrade test; rollback or forward-recovery plan |
 | CL-104 | done; Codex | CL-102–103 | Development/staging configuration, example variable names, local database/worker startup and health/readiness checks; clean checkout works without undocumented local paths |
-| CL-105 | partial; Codex | CL-010, CL-102–104 | Production CI: static/type checks, tests, migration validation, dependency/security checks and artifact build; no privileged secrets for untrusted PRs |
+| CL-105 | done; Codex | CL-010, CL-102–104 | Production CI: static/type checks, tests, migration validation, dependency/security checks and artifact build; no privileged secrets for untrusted PRs |
 
 **Exit:** Reproducible production skeleton, accepted decisions, working migrations, documented local/staging setup. No real staff data until authorization baseline is verified.
 
@@ -172,7 +172,7 @@ The original acceptance descriptions above remain the full roadmap, including de
 
 | Task | Implemented now | Remaining work |
 | --- | --- | --- |
-| CL-105 | Django/dependency/migration checks and real Docker/browser/persistence CI | Record remote green run; CI security audit job and future formatting policy |
+| CL-105 | Django/dependency/migration/security checks and real Docker/browser/persistence CI | Passing remote run recorded in WORKLOG; keep subsequent release checks green |
 | CL-201 / 204 | Multiple catalogs/memberships and required skill checks | Catalog edit/archive, effective dates and skill expiry/evidence |
 | CL-205 | Password auth, sessions, one-use invite/recovery, throttles, verified email changes | Real transport acceptance, optional MFA/SSO and independent review |
 | CL-302 / 303 | Requests/approve/decline, impact preview/reopening; weekly/date unavailable blocks | Staff cancellation of time-off request and richer exception/effective-date policy |

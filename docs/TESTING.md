@@ -15,7 +15,7 @@ Collectstatic is required before rendering with the production hashed-asset mani
 
 ## Recorded local results — November 5, 2026
 
-- 52 Django tests passed on Python 3.12.14 / Django 5.2.19. Includes actual two-thread write contention, assignment eligibility/interval/DST/hours rules, stale versions, scope denial, draft publication, open-shift approval races, one-use/revocable tokens, valid browser-style HTTPS CSRF, termination of active sessions and calendar access, encrypted outbox and duplicate digests.
+- 56 Django tests passed on Python 3.12.14 / Django 5.2.19. Includes actual two-thread write contention, assignment eligibility/interval/DST/hours rules, stale versions, scope denial, draft publication, open-shift approval races, one-use/revocable tokens, valid browser-style HTTPS CSRF, termination of active sessions and calendar access, encrypted outbox and duplicate digests.
 - Authenticated Playwright 1.62.1 / Chromium 151 browser flow passed: create/assign/publish, invite and set password, staff login, private calendar, hidden draft edit, publication update, time-off approval and termination with retained history/token denial.
 - 72 page/width checks across 1440, 1024, 820, 768, 390 and 320 pixels: no horizontal overflow, runtime errors or failed static assets. Manager and staff screenshots were visually inspected.
 - axe-core 4.14.0, WCAG 2 A/AA and 2.1 AA tags: no automated violations on 16 key manager/staff/login screens. Incomplete/manual rules remain; this does not certify full accessibility.

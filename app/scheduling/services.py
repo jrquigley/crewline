@@ -210,7 +210,7 @@ def queue(user,key,subject,body,recipient=''):
     if user.is_active:
         Outbox.objects.get_or_create(key=key,defaults={'user':user,'subject':subject,'body':cipher().encrypt(body.encode()).decode(),'recipient':recipient,'available_at':timezone.now()})
 
-def record_publication(event,user,new_snapshot):
+def record_publication(event,user,new_snapshot,*,preserve_draft=False):
     old=event.published_snapshot;old_version=event.published_version
     event.published_snapshot=new_snapshot;event.published_version=event.version
     event.save(update_fields=['published_snapshot','published_version'])
@@ -227,14 +227,24 @@ def record_publication(event,user,new_snapshot):
             changed=before[emp_id]!=after[emp_id] or any(old.get(k)!=new_snapshot.get(k) for k in ('name','location','canceled'))
             if changed:
                 emp=Employee.objects.select_related('user').get(pk=emp_id)
-                lines=[f'Your schedule for {event.name} has changed.']
+                lines=[f'Your schedule for {new_snapshot["name"]} has changed.']
+                if before[emp_id]:
+                    lines.append('Previously:')
+                    for s in before[emp_id]:
+                        zone=old['zone'];a=parse_datetime(s['starts']).astimezone(ZoneInfo(zone));b=parse_datetime(s['ends']).astimezone(ZoneInfo(zone))
+                        lines.append(f'{a:%a %b %d, %I:%M %p} – {b:%a %b %d, %I:%M %p} · {old["location"]} · {zone}')
+                if after[emp_id]: lines.append('Your published shifts now:')
                 for s in after[emp_id]:
-                    d=parse_datetime(s['starts']).astimezone(ZoneInfo(event.location.timezone))
-                    end=parse_datetime(s['ends']).astimezone(ZoneInfo(event.location.timezone))
-                    lines.append(f'{d:%a %b %d, %I:%M %p} – {end:%I:%M %p} · {event.location.name} · {event.location.timezone}')
+                    zone=new_snapshot['zone'];d=parse_datetime(s['starts']).astimezone(ZoneInfo(zone))
+                    end=parse_datetime(s['ends']).astimezone(ZoneInfo(zone))
+                    lines.append(f'{d:%a %b %d, %I:%M %p} – {end:%a %b %d, %I:%M %p} · {new_snapshot["location"]} · {zone}')
                 if not after[emp_id]: lines.append('Your assignment for this event has been canceled or reassigned.')
                 lines.append(settings.APP_BASE_URL+'/my/schedule/')
                 queue(emp.user,f'event:{event.pk}:{event.version}:{emp_id}','Your schedule has changed','\n\n'.join(lines))
+    if preserve_draft:
+        # A targeted leave/offboarding publication must not mark unrelated
+        # manager draft edits as already published.
+        event.version+=1;event.save(update_fields=['version'])
 
 @transaction.atomic
 def publish(event_id,user,expected):
@@ -272,6 +282,7 @@ def remove_future_employee(employee,actor):
     affected=set(Shift.objects.filter(employee=employee,ends__gt=now).values_list('event_id',flat=True))
     Shift.objects.filter(employee=employee,ends__gt=now).update(employee=None)
     for e in Event.objects.select_related('location'):
+        was_dirty=e.dirty
         old=deepcopy(e.published_snapshot)
         changed=False
         for s in old.get('shifts',[]):
@@ -279,7 +290,7 @@ def remove_future_employee(employee,actor):
                 s['employee']=None;s['name']='Open shift';changed=True
         if changed or e.pk in affected:
             e.version+=1;e.save(update_fields=['version'])
-            if changed: record_publication(e,actor,old)
+            if changed: record_publication(e,actor,old,preserve_draft=was_dirty)
     return len(affected)
 
 @transaction.atomic
@@ -329,12 +340,13 @@ def decide_leave(request_id,actor,approve):
         event_ids=set(Shift.objects.filter(employee=q.employee,starts__lt=b,ends__gt=a).values_list('event_id',flat=True))
         Shift.objects.filter(employee=q.employee,starts__lt=b,ends__gt=a).update(employee=None)
         for e in Event.objects.select_related('location'):
+            was_dirty=e.dirty
             snap=deepcopy(e.published_snapshot);changed=False
             for s in snap.get('shifts',[]):
                 if s.get('employee')==q.employee_id and overlap(parse_datetime(s['starts']),parse_datetime(s['ends']),a,b):
                     s['employee']=None;s['name']='Open shift';changed=True
             if changed or e.pk in event_ids:
                 e.version+=1;e.save(update_fields=['version'])
-                if changed: record_publication(e,actor,snap)
+                if changed: record_publication(e,actor,snap,preserve_draft=was_dirty)
     queue(q.employee.user,f'leave:{q.pk}:{q.status}','Your time-off request',f'Your time-off request for {q.first_day} through {q.last_day} was {q.status}.\n\n{settings.APP_BASE_URL}/my/time-off/')
     audit(actor,'Time off '+q.status,q.pk)

@@ -20,7 +20,7 @@ All implementation in this release was by Codex. No Claude/independent review oc
 
 ## Verification checkpoint
 
-Local: 52 Django tests passed, complete authenticated Playwright workflows passed, 72 responsive checks, zero automated axe violations on 16 screens, no known vulnerabilities in pinned runtime packages. Screenshots/reports in docs/evidence. Taste raw-CDP checker scripts did not complete on Windows; no passing Taste score is claimed. Exact remote CI/PR evidence is appended to WORKLOG after upload.
+Local: 56 Django tests passed, complete authenticated Playwright workflows passed, 72 responsive checks, zero automated axe violations on 16 screens, no known vulnerabilities in pinned runtime packages. Screenshots/reports in docs/evidence. Taste raw-CDP checker scripts did not complete on Windows; no passing Taste score is claimed. Exact remote CI/PR evidence is appended to WORKLOG after upload.
 
 ## Next work and limitations
 
