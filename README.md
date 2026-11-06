@@ -1,58 +1,59 @@
 # Crewline
 
-Source repository: [jrquigley/gig](https://github.com/jrquigley/gig) · Private · [Resume / handoff](docs/HANDOFF.md)
+[Source: jrquigley/crewline](https://github.com/jrquigley/crewline) · [Deployment](docs/DEPLOYMENT.md) · [Claude / Codex handoff](docs/HANDOFF.md) · [Full roadmap](docs/ROADMAP.md)
 
-Event-based staff scheduling for multiple departments and locations. The staff experience is intentionally simple and designed for a phone browser; administration is designed primarily for desktop and laptop browsers.
+Event staff scheduling for multiple departments and locations. A calm desktop workspace helps managers create Events, choose qualified people, check hours and publish. Staff get a simple phone screen with their next shift, upcoming schedule and time-off request.
 
-**Current release: 0.1.0 — interactive interface preview, local preview web server, and implementation plan.** There is no production database, authentication service, email delivery, calendar connector, or deployed website yet. All people and Events are sample data. Changes reset when the standalone preview is refreshed.
+**Version 1.0.0: functioning server application with authentication and persistent data.** Intended host: `https://shifts.quigspace.com`. Repository upload does not deploy the owner's server. Start with synthetic data and follow the deployment/pilot checks before using real staff.
 
-## Run the preview
+![Manager schedule](docs/evidence/manager-desktop.png)
 
-Install Node.js 22 or later. The current starter has no package dependencies and needs no dependency installation.
+## Run with Docker
 
-```powershell
-node scripts/build-preview.mjs
-node --test tests/preview.test.mjs
-node server/index.mjs
+```sh
+git clone https://github.com/jrquigley/crewline.git
+cd crewline
+cp .env.example .env
+# Edit .env: set your real ADMIN_EMAIL and a unique ADMIN_PASSWORD (15+ characters).
+docker compose up -d --build
+docker compose logs --tail 50 crewline
 ```
 
-Open <http://127.0.0.1:3000>. The health endpoint is <http://127.0.0.1:3000/healthz>. Stop with Ctrl+C. `HOST` and `PORT` can override the loopback address and port, but this unauthenticated sample-data server is for interface review.
+Put your HTTPS reverse proxy in front of `127.0.0.1:3000`, forwarding `Host` and `X-Forwarded-Proto: https`. Sign in at your configured `APP_BASE_URL`. The default is `https://shifts.quigspace.com`. See the [full first-start, proxy, update, backup and recovery instructions](docs/DEPLOYMENT.md), including container-network alternatives. No default administrator password exists.
 
-If npm is available, `npm run build`, `npm test`, and `npm start` are equivalent shortcuts. The original Codex shell exposed Node but not npm, so the direct Node commands above were used for final validation.
+The named `/data` volume retains the SQLite database and generated secret across container replacements. **Keep this volume and its secret.** One container serves one organization; horizontal replicas and a network-mounted SQLite database are unsupported.
 
-Use the Manager / admin and Staff switches to review both interfaces. Open an Event to edit coverage. The initial Jazz Event deliberately has one short coverage slot to demonstrate rule validation. The fixed sample week is November 2–8, 2026, using Pacific time.
+## Included
 
-## Start reading here
+- Secure sessions, CSRF protection, throttled sign-in, one-use invitations and password recovery; verified changes to sign-in email require the current password.
+- Admin, scoped managers and staff; departments, locations, skills, staff records and weekly limits.
+- Arbitrary-date Events, setup/Event/closing coverage, additional departments and headcounts, overlapping handovers, shift splitting, assignment checks and hours CSV.
+- Drafts remain private until publication. Conflict checks run on the server and again during publication or open-shift approval.
+- Staff next shift, personal/team schedule, time off, recurring/date availability, contact information, open-shift requests and calendar setup.
+- Employment termination revokes sessions, invitations and calendar tokens, cancels pending delivery, reopens future shifts and retains history.
+- SMTP outbox, published-shift updates and a configurable next-week email. Without SMTP, email remains disabled; private invites can be shared manually.
+- Private revocable iCalendar subscriptions and Google/Android/iPhone/Outlook instructions; separate add-to-home-screen guidance.
+- Five fictional employees created once: Avery Lane, Bennett Reed, Cameron Brooks, Dana Ellis and Ellis Morgan. They have no usable passwords until individually invited. Fictional addresses are blocked from delivery.
 
-| Document | Purpose |
-| --- | --- |
-| [Start here](docs/START-HERE.md) | Current state, reading order, repository map |
-| [Full roadmap](docs/ROADMAP.md) | Milestones, task IDs, dependencies, acceptance criteria and release gates |
-| [Requirements](docs/REQUIREMENTS.md) | User requirements and status of each capability |
-| [Architecture](docs/ARCHITECTURE.md) | Proposed server architecture, scheduling rules, APIs and background jobs |
-| [Data model](docs/DATA-MODEL.md) | Proposed persistent entities and invariants |
-| [Decisions](docs/DECISIONS.md) | Confirmed directions, proposals and unresolved questions |
-| [Handoff](docs/HANDOFF.md) | The exact starting point for the next agent |
-| [Work log](docs/WORKLOG.md) | Completed work, validation evidence and limitations |
-| [Testing](docs/TESTING.md) | Commands, current checks and required production checks |
-| [Deployment](docs/DEPLOYMENT.md) | Local operation and planned production operations |
-| [GitHub access](docs/GITHUB-ACCESS.md) | Creating the repository and connecting either agent |
-| [Contributing](CONTRIBUTING.md) | Shared development process |
+## Current boundaries
 
-Codex should read [AGENTS.md](AGENTS.md). Claude should read [CLAUDE.md](CLAUDE.md), which points to the same shared instructions. Neither agent should depend on a private chat transcript for project state.
+This is a small-team pilot release. Live external Event imports, skill expiry, rehire automation, time clock/payroll, SSO/MFA, multi-tenant billing and native apps remain roadmap work. External Event context is currently a manual manager note. Scheduled hours are planning totals, with no payroll or legal-policy engine. Actual email-provider delivery, phone calendar clients, production TLS, backup restoration and manager/staff acceptance must be verified on the owner's deployment.
 
-## Source and build
+## Develop and verify
 
-- `prototype/crewline.fragment.html`: canonical editable UI reference; includes the sample business logic. It is not the planned production application architecture.
-- `scripts/build-preview.mjs`: reproducible standalone export; replaces optional chat design controls and provides memory-only preview state and decorative symbol fallbacks.
-- `public/index.html`: committed generated browser preview. Change the source, then run `npm run build`; do not edit this file independently.
-- `server/index.mjs`: Node HTTP server serving only the public preview and health endpoint.
-- `tests/preview.test.mjs`: dependency-free server, script syntax, terminology and documentation-link checks.
-- `scripts/browser-smoke.cjs`: optional interaction and responsive-layout checks; requires Playwright separately.
-- `.github/workflows/preview-checks.yml`: GitHub CI for the default preview suite; [initial run passed](https://github.com/jrquigley/gig/actions/runs/42096161232). Latest checkpoint details are in WORKLOG.md.
+Python 3.12+ (Docker/CI use 3.13):
 
-## Hosting and ownership
+```sh
+python -m venv .venv
+# Activate .venv for your shell, then:
+python -m pip install -r requirements.txt
+python app/manage.py collectstatic --noinput
+python app/manage.py check
+python app/manage.py test scheduling --noinput
+```
 
-GitHub will store and coordinate the source. A production scheduling service also needs an application host, database, worker/scheduler and external providers. GitHub Pages is a static hosting product and does not run this project's future server-side services. See [Deployment](docs/DEPLOYMENT.md).
+[Testing](docs/TESTING.md) describes the real browser, accessibility, security, concurrency and Docker checks. [Design review](docs/DESIGN-REVIEW.md) records Taste application, screenshots and tool limitations. The earlier Node interface preview remains under `prototype/`, `public/` and `server/`; `npm start` now starts the Django service, while `npm run preview` runs the archived sample preview.
 
-The owner-created source repository is [jrquigley/gig](https://github.com/jrquigley/gig), verified private on November 5, 2026. Application terminology remains Event; Crewline is the working product name. The initial starter and shared documentation were imported on `main`; subsequent changes use task branches and PRs. No production deployment or license grant has been made. Keep real staff data and credentials out of the repository.
+## Documentation and shared work
+
+Start with [START-HERE](docs/START-HERE.md), [HANDOFF](docs/HANDOFF.md), [ROADMAP](docs/ROADMAP.md), [REQUIREMENTS](docs/REQUIREMENTS.md), [ARCHITECTURE](docs/ARCHITECTURE.md), [DATA-MODEL](docs/DATA-MODEL.md), [DECISIONS](docs/DECISIONS.md), [WORKLOG](docs/WORKLOG.md), [TESTING](docs/TESTING.md) and [DEPLOYMENT](docs/DEPLOYMENT.md). Contributors follow [AGENTS.md](AGENTS.md); [CLAUDE.md](CLAUDE.md) uses the same agreement. No Claude or independent security review is claimed. No project license has been selected; font licensing is included beside the font.

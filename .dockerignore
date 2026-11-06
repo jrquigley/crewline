@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/.local
+**/staticfiles
+**/*.sqlite3
+**/secret.key
+node_modules
+public
+prototype
+work
+test-results
+playwright-report

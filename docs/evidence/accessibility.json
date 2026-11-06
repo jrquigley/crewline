@@ -1,0 +1,98 @@
+[
+  {
+    "label": "login-phone",
+    "violations": [],
+    "passes": 20,
+    "incomplete": 1
+  },
+  {
+    "label": "manager-dashboard",
+    "violations": [],
+    "passes": 20,
+    "incomplete": 1
+  },
+  {
+    "label": "/manage/staff/",
+    "violations": [],
+    "passes": 14,
+    "incomplete": 0
+  },
+  {
+    "label": "/manage/events/new/",
+    "violations": [],
+    "passes": 21,
+    "incomplete": 0
+  },
+  {
+    "label": "/manage/requests/",
+    "violations": [],
+    "passes": 14,
+    "incomplete": 0
+  },
+  {
+    "label": "/manage/hours/",
+    "violations": [],
+    "passes": 17,
+    "incomplete": 1
+  },
+  {
+    "label": "/manage/settings/",
+    "violations": [],
+    "passes": 20,
+    "incomplete": 0
+  },
+  {
+    "label": "/my/account/",
+    "violations": [],
+    "passes": 20,
+    "incomplete": 0
+  },
+  {
+    "label": "staff-home-phone",
+    "violations": [],
+    "passes": 14,
+    "incomplete": 1
+  },
+  {
+    "label": "/my/schedule/",
+    "violations": [],
+    "passes": 14,
+    "incomplete": 1
+  },
+  {
+    "label": "/my/team/",
+    "violations": [],
+    "passes": 14,
+    "incomplete": 1
+  },
+  {
+    "label": "/my/time-off/",
+    "violations": [],
+    "passes": 19,
+    "incomplete": 1
+  },
+  {
+    "label": "/my/availability/",
+    "violations": [],
+    "passes": 20,
+    "incomplete": 1
+  },
+  {
+    "label": "/my/account/",
+    "violations": [],
+    "passes": 20,
+    "incomplete": 1
+  },
+  {
+    "label": "/my/open-shifts/",
+    "violations": [],
+    "passes": 16,
+    "incomplete": 1
+  },
+  {
+    "label": "/my/calendar/",
+    "violations": [],
+    "passes": 17,
+    "incomplete": 1
+  }
+]

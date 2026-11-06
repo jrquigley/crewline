@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "responsiveChecks": 72,
+  "flows": [
+    "login",
+    "csrf browser forms",
+    "event creation",
+    "assignment",
+    "publication",
+    "private one-use invitation",
+    "staff login",
+    "private calendar",
+    "draft isolation",
+    "time off approval",
+    "offboarding",
+    "calendar revocation"
+  ],
+  "errors": [],
+  "failedAssets": [],
+  "overflows": []
+}

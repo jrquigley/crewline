@@ -16,7 +16,7 @@ Applies to Codex, Claude, and any other contributor working on this repository. 
 - Preserve the simple phone-first staff experience. Administrative complexity stays in manager/admin views.
 - Events may be irregular, cross departments and locations, and require coverage before and after the Event with overlapping handovers.
 - Employee records and login access are separate concerns. Termination revokes access and preserves required history.
-- Real authentication, authorization, assignment validity and publishing must be enforced on the server. The current browser checks are a design reference only.
+- Real authentication, authorization, assignment validity and publishing must be enforced on the server. The Django app is canonical; preview-only browser checks are historical references.
 - Staff must see published data, not manager drafts. Do not expose coworker contact details, private availability notes or time-off reasons in team schedules.
 - Never add real staff records, credentials, production backups, tokens or private calendar feed URLs to source or logs.
 
@@ -24,7 +24,7 @@ Applies to Codex, Claude, and any other contributor working on this repository. 
 
 - Keep changes scoped to the selected task. Prefer a modular monolith until evidence justifies greater infrastructure complexity.
 - Document work completed AND work planned. Record the reason for material decisions, affected files, dependencies and unresolved limitations. Store engineering facts and decisions, not private reasoning transcripts.
-- For UI changes, edit `prototype/crewline.fragment.html` and regenerate the standalone preview while this prototype is canonical. Production framework work must have an explicit migration plan; do not silently replace the working reference.
+- For production UI changes, edit `app/templates/` and `app/static/`; collect static files and run relevant server/browser checks. The old prototype remains an archived executable design reference. Change and rebuild it only when intentionally updating that reference.
 - Do not add dependencies or providers merely to finish a diagram. Any proposed stack, service or release date remains provisional until recorded appropriately.
 - Test meaningful behavior and failure paths. Mark unrun checks as unrun. A generated UI, a passing HTTP check, or a browser-only guard is not proof of production security.
 - User authorization may permit repository operations, external services or deployments. Otherwise, prepare reviewable work before asking for any required final approval; do not infer permission to send staff emails from a UI design request.
@@ -52,11 +52,14 @@ Do not overwrite another agent's newer handoff silently. Reconcile it against Gi
 ## Current commands
 
 ```text
-npm run build
-npm test
-npm start
+python -m pip install -r requirements.txt
+python app/manage.py collectstatic --noinput
+python app/manage.py check
+python app/manage.py makemigrations --check --dry-run
+python app/manage.py test scheduling --noinput
+docker compose up -d --build
 ```
 
-Optional browser checks: `npm run test:browser`; see `docs/TESTING.md` for setup. Production checks will expand when the production stack is chosen.
+Authenticated browser verification: `node scripts/app-browser.cjs` against a fresh isolated loopback deployment, with Playwright/axe and synthetic credentials configured as in docs/TESTING.md. It mutates staff data. Never run against production. Historical preview checks remain `node scripts/build-preview.mjs --check` and `node --test tests/preview.test.mjs`.
 
-If npm is unavailable, run `node scripts/build-preview.mjs`, `node --test tests/preview.test.mjs`, and `node server/index.mjs` directly. Do not treat a missing npm executable as a passing test or a reason to install dependencies the starter does not need.
+Current production source is `app/`; Docker runs Waitress/Django, not `server/index.mjs`. Keep SQLite/secret in the existing persistent /data volume. Do not deploy multiple replicas. No real SMTP sends without owner authorization/configuration. GitHub repo is public; never commit live tokens, secrets or staff records.
