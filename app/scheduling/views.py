@@ -291,7 +291,7 @@ def directory(request):
 @require_http_methods(['GET','POST'])
 def employee_edit(request,pk=None):
     emp=get_object_or_404(svc.scoped_employees(request.user),pk=pk) if pk else None
-    if emp and (emp.user.is_superuser or emp.user.is_staff and not request.user.is_superuser): raise PermissionDenied
+    if emp and not svc.can_edit_employee(request.user,emp): raise PermissionDenied('An administrator must edit staff shared outside your management scope.')
     form=EmployeeForm(request.POST or None,instance=emp,user=request.user)
     if emp: form.fields['email'].disabled=True
     if request.method=='POST' and form.is_valid():
@@ -320,7 +320,7 @@ def employee_detail(request,pk):
         try: invite=svc.cipher().decrypt(invite.encode()).decode()
         except Exception: invite=None
     return render(request,'scheduling/employee_detail.html',{'employee':emp,'assignments':Shift.objects.filter(employee=emp,event__in=svc.scoped_events(request.user)).select_related('event__location'),
-                  'history':retained[:12],'invite_url':invite if invite and request.session.pop('invite_employee',None)==emp.pk else None})
+                  'history':retained[:12],'can_edit_employee':svc.can_edit_employee(request.user,emp),'invite_url':invite if invite and request.session.pop('invite_employee',None)==emp.pk else None})
 
 @manager_required
 @require_POST

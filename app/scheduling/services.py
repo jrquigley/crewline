@@ -50,6 +50,13 @@ def can_manage(user, event):
 def require_manage(user, event):
     if not can_manage(user,event): raise PermissionDenied('This event is outside your management scope.')
 
+def can_edit_employee(user, employee):
+    if user.is_superuser: return True
+    if not manager(user) or not hasattr(user,'employee') or employee.user.is_staff: return False
+    return (scoped_employees(user).filter(pk=employee.pk).exists()
+            and not employee.departments.exclude(pk__in=user.employee.departments.values('pk')).exists()
+            and not employee.locations.exclude(pk__in=user.employee.locations.values('pk')).exists())
+
 def audit(user, action, target, details=None):
     Audit.objects.create(actor=user,action=action,target=str(target),details=details or {})
 

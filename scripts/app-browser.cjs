@@ -34,12 +34,13 @@ for(const route of ['/manage/','/manage/staff/','/manage/events/new/','/manage/r
 await page.goto(base+'/manage/');await page.screenshot({path:path.join(out,'manager-'+width+'.png'),fullPage:true});}
 for(const route of ['/manage/staff/','/manage/events/new/','/manage/requests/','/manage/hours/','/manage/settings/','/my/account/']){await page.goto(base+route);await audit(page,route);}
 await page.setViewportSize({width:1440,height:1000});await page.goto(base+'/manage/events/new/');
-const day=new Date();day.setDate(day.getDate()+1);const iso=day.toLocaleDateString('en-CA');const title='Browser coverage '+Date.now();
+// Use the workspace's local tomorrow, never the CI runner's timezone.
+const iso=(await page.getByLabel('Start',{exact:true}).inputValue()).slice(0,10);const title='Browser coverage '+Date.now();
 await page.getByLabel('Event name',{exact:true}).fill(title);await page.getByLabel('Start',{exact:true}).fill(iso+'T10:00');await page.getByLabel('Finish',{exact:true}).fill(iso+'T12:00');await page.getByRole('button',{name:'Create event & add people'}).click();
 assert.match(await page.locator('h1').innerText(),/Browser coverage/);const eventUrl=page.url();
 const shiftUrls=await page.locator('a[href^="/manage/shifts/"]').evaluateAll(links=>links.map(a=>a.href));assert.equal(shiftUrls.length,3);
 for(const [i,name] of ['Avery Lane','Bennett Reed','Dana Ellis'].entries()){
-await page.goto(shiftUrls[i]);const select=page.getByLabel('Person for this shift');const value=await select.locator('option').filter({hasText:name}).getAttribute('value');await select.selectOption(value);await page.getByRole('button',{name:'Save assignment'}).click();assert.equal(page.url(),eventUrl);
+await page.goto(shiftUrls[i]);const select=page.getByLabel('Person for this shift');const value=await select.locator('option').filter({hasText:name}).getAttribute('value');await select.selectOption(value);await page.getByRole('button',{name:'Save assignment'}).click();assert.equal(page.url(),eventUrl,await page.locator('main').innerText());
 }
 await page.getByRole('link',{name:'Review & publish'}).click();await page.getByRole('button',{name:'Publish schedule'}).click();
 await page.screenshot({path:path.join(out,'event-desktop.png'),fullPage:true});

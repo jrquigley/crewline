@@ -84,6 +84,20 @@ class AppTests(TestCase):
         manager=self.people[0];manager.user.is_staff=True;manager.user.save()
         Shift.objects.create(event=self.event,phase='during',department=self.other_dep,skill=self.other_skill,starts=self.start,ends=self.event.ends)
         self.assertFalse(svc.can_manage(manager.user,self.event))
+    def test_manager_cannot_remove_out_of_scope_employee_memberships(self):
+        manager=self.people[0];manager.user.is_staff=True;manager.user.save()
+        shared=self.people[1];shared.departments.add(self.other_dep);shared.locations.add(self.other_loc)
+        self.client.force_login(manager.user)
+        self.assertEqual(self.client.get(reverse('employee_edit',args=[shared.pk])).status_code,403)
+        self.assertEqual(self.client.post(reverse('employee_edit',args=[shared.pk]),{'name':'Changed'}).status_code,403)
+        self.assertEqual(shared.departments.count(),2);self.assertEqual(shared.locations.count(),2)
+        self.assertTrue(svc.can_edit_employee(self.admin,shared))
+    def test_private_bearer_urls_redacted_in_application_logs(self):
+        import logging
+        from .safe_logging import PrivateURLFilter
+        record=logging.LogRecord('django.request',logging.ERROR,'',0,'Unavailable: %s',('/calendar/private-test-secret.ics',),None)
+        PrivateURLFilter().filter(record)
+        self.assertNotIn('private-test-secret',record.getMessage());self.assertIn('[redacted]',record.getMessage())
     def test_manager_pages_render(self):
         self.login_admin()
         for url in ['/manage/','/manage/events/new/','/manage/staff/','/manage/staff/new/','/manage/requests/','/manage/settings/','/manage/hours/','/manage/history/',reverse('event_detail',args=[self.event.pk]),reverse('event_edit',args=[self.event.pk]),reverse('event_publish',args=[self.event.pk]),reverse('employee_detail',args=[self.people[0].pk]),reverse('employee_edit',args=[self.people[0].pk]),reverse('shift_edit',args=[self.event.shifts.first().pk])]:
