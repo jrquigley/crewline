@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block title %}Verify email{% endblock %}{% block content %}<section class="auth-card"><h1>Verify your email</h1><p>Use {{ new_email }} for your Crewline account?</p><form method="post">{% csrf_token %}<button class="btn btn--primary" type="submit">Verify email address</button></form></section>{% endblock %}

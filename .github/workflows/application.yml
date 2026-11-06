@@ -1,0 +1,85 @@
+name: Application and Docker
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install pip-audit
+      - run: pip-audit -r requirements.txt
+  application:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: pip check
+      - run: python app/manage.py collectstatic --noinput
+      - run: python app/manage.py check --deploy --fail-level ERROR
+      - run: python app/manage.py makemigrations --check --dry-run
+      - run: python app/manage.py test scheduling --noinput
+  docker-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Build real production container
+        run: docker build -t crewline:test .
+      - name: Start isolated test deployment
+        run: |
+          docker volume create crewline-ci-data
+          docker run -d --name crewline-ci -p 127.0.0.1:8300:3000 \
+            -v crewline-ci-data:/data \
+            -e APP_BASE_URL=http://127.0.0.1:8300 -e ALLOW_INSECURE_HTTP=true \
+            -e ADMIN_EMAIL=admin@example.test \
+            -e 'ADMIN_PASSWORD=Local-test-only-copper-garden-71!' crewline:test
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8300/healthz/; then exit 0; fi
+            sleep 2
+          done
+          docker logs crewline-ci
+          exit 1
+      - name: Install browser test tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/browser-tools" playwright@1.62.1 axe-core@4.14.0
+          "$RUNNER_TEMP/browser-tools/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Exercise real authenticated browser workflows
+        env:
+          TEST_BASE_URL: http://127.0.0.1:8300
+          TEST_ADMIN_EMAIL: admin@example.test
+          TEST_ADMIN_PASSWORD: Local-test-only-copper-garden-71!
+          TEST_OUTPUT: .local/browser
+        run: AXE_PATH="$RUNNER_TEMP/browser-tools/node_modules/axe-core/axe.min.js" PLAYWRIGHT_MODULE="$RUNNER_TEMP/browser-tools/node_modules/playwright" node scripts/app-browser.cjs
+      - name: Verify non-root runtime and persistent records after container replacement
+        run: |
+          test "$(docker exec crewline-ci id -u)" = "10001"
+          docker stop crewline-ci
+          docker rm crewline-ci
+          docker run -d --name crewline-ci -p 127.0.0.1:8300:3000 \
+            -v crewline-ci-data:/data -e APP_BASE_URL=http://127.0.0.1:8300 \
+            -e ALLOW_INSECURE_HTTP=true crewline:test
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8300/healthz/; then break; fi
+            sleep 2
+          done
+          docker exec crewline-ci python manage.py shell -c "from scheduling.models import Employee; from django.contrib.auth.models import User; assert Employee.objects.count()==5; assert Employee.objects.filter(ended_at__isnull=False).count()==1; assert User.objects.get(username='admin@example.test').check_password('Local-test-only-copper-garden-71!')"
+      - name: Browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence
+          path: .local/browser/
+          include-hidden-files: true
+      - name: Container diagnostics
+        if: failure()
+        run: docker logs --tail 100 crewline-ci

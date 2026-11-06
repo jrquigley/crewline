@@ -1,52 +1,25 @@
 # Start here
 
-Requirements first captured November 4, 2026; current preparation checkpoint November 4–5, America/Los_Angeles. Project name Crewline is a working name.
+Crewline 1.0.0 is a Django server application, stored in the owner-supplied **public** [jrquigley/crewline](https://github.com/jrquigley/crewline) repository. Intended HTTPS host: `shifts.quigspace.com`. The earlier private repository and interface preview are historical. Do not change repository visibility or add private information to source.
 
-## What the owner wants
+Read AGENTS.md, HANDOFF.md, the latest WORKLOG.md entry, ROADMAP.md and DECISIONS.md before changing code. Inspect Git rather than assuming a recorded checkpoint is still current. The owner requested complete shared documentation so either Claude or Codex can resume without this chat.
 
-A web-server application for irregular Event-based scheduling across departments and locations. Managers need coverage, eligibility and employee-hour visibility. Staff need a very simple phone browser interface: next shift, upcoming schedule, time off, personal details, availability, open shifts and coworker schedules. Email updates, a weekly schedule email, personal calendars, record-preserving termination and modular external Event context are required. Source and coordination will be on GitHub. Codex and Claude must be able to resume each other's work.
+## Source map
 
-## What exists
-
-- An interactive sample-data UI with both interfaces, basic in-browser scheduling checks and draft/published snapshots.
-- A self-contained browser export and dependency-free Node preview server.
-- Automated checks for the preview server/build and an optional browser interaction harness.
-- A full implementation roadmap, proposed architecture/data model, decisions, work log and handoff instructions.
-
-## What does not exist
-
-Production authentication/authorization, shared database, secure session revocation, scheduling APIs, durable audit history, actual emails, queued jobs, a weekly delivery scheduler, personal calendar feeds, live external Event ingestion, production infrastructure and an approved license. Browser sample data is not a database. The preview interface switch is not role-based security.
-
-The owner supplied [jrquigley/gig](https://github.com/jrquigley/gig) on November 5, 2026. It was verified private and empty, and the authenticated account has admin access. The canonical local checkout is now `outputs/gig` in the original workspace; `outputs/crewline` and its archive are the earlier delivery snapshot. The initial import is on `main` at `5d97d5ad4acb3bd9c8388a839a6bb2bfe35b1e03`; [GitHub CI passed](https://github.com/jrquigley/gig/actions/runs/42096161232). Subsequent development uses task branches and PRs. No production deployment exists.
-
-## Reading order
-
-1. [Handoff](HANDOFF.md): actual latest checkpoint and next task.
-2. [Requirements](REQUIREMENTS.md): what must be delivered.
-3. [Roadmap](ROADMAP.md): ordered tasks and release gates.
-4. [Decisions](DECISIONS.md): accepted direction vs proposals and open questions.
-5. [Architecture](ARCHITECTURE.md) and [Data model](DATA-MODEL.md).
-6. [Testing](TESTING.md), [Deployment](DEPLOYMENT.md), [GitHub access](GITHUB-ACCESS.md), [Work log](WORKLOG.md).
-
-## Current source map
-
-| Path | Purpose |
+| Path | Responsibility |
 | --- | --- |
-| `prototype/crewline.fragment.html` | Canonical prototype UI, sample data and local interaction logic |
-| `public/index.html` | Generated standalone UI; served by the preview server |
-| `scripts/build-preview.mjs` | Standalone generator; no external runtime assets required |
-| `server/index.mjs` | Preview server; only `/`, `/index.html`, `/healthz`, `/favicon.ico` |
-| `tests/preview.test.mjs` | Node test suite |
-| `scripts/browser-smoke.cjs` | Optional browser smoke checks |
-| `docs/` | Shared project state, requirements and future implementation design |
-| `AGENTS.md`, `CLAUDE.md` | Shared and agent entry instructions |
-| `.github/` | Prepared CI and contribution templates |
+| `app/config/` | Django settings, URLs, WSGI |
+| `app/scheduling/models.py`, `migrations/` | Persistent schema and upgrade history |
+| `app/scheduling/services.py` | Scheduling, scope, publication, offboarding and token rules |
+| `app/scheduling/forms.py`, `views.py` | Validated server workflows and authorization |
+| `app/scheduling/delivery.py`, `calendar.py` | SMTP outbox/digests and private calendar feed |
+| `app/scheduling/tests.py` | Security, workflows, interval rules and real concurrent transactions |
+| `app/templates/`, `app/static/` | Production manager/staff UI, local font and Taste motion assets |
+| `Dockerfile`, `compose.yaml`, `docker-entrypoint.sh` | Non-root single-container runtime and persistent `/data` |
+| `.env.example`, `requirements.txt` | Configuration names and pinned runtime dependencies |
+| `scripts/app-browser.cjs` | Authenticated end-to-end, responsive and optional axe audit |
+| `.github/workflows/application.yml` | Django checks, Docker/browser/persistence validation |
+| `prototype/`, `public/`, `server/` | Archived executable design preview; never production auth |
+| `docs/` | Requirements, decisions, roadmap, tests, operation and handoff |
 
-## Working principles
-
-- Event = real-world staffing occasion; Shift = staffing slot/assignment; External Event = read-only planning context until explicitly converted.
-- Each Event can have multiple departments, skills and people in each coverage phase.
-- Staff screens remain simple as modules are added.
-- Publishing is explicit and must eventually be transactional.
-- Preserve historical scheduling records independently of account access.
-- Every material change includes documentation, evidence and a resumption point.
+Run the [test commands](TESTING.md). Use [deployment instructions](DEPLOYMENT.md) for Docker. Read [architecture](ARCHITECTURE.md) before altering a transaction or permission boundary. Planned work is tracked in the [roadmap](ROADMAP.md); do not mark client/provider/production checks done from a simulation.

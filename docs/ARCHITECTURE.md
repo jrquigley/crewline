@@ -1,141 +1,49 @@
-# Proposed production architecture
+# Implemented architecture
 
-**Status: proposal.** The owner confirmed a web-server application, GitHub source and shared-agent documentation. Framework, database service, authentication provider and hosting target are not yet approved or implemented. The Node preview server is an interface-review tool, not the production backend.
-
-## Recommended starting shape
-
-A modular monolith: one application codebase with a browser UI, authenticated server/API, relational database, worker and scheduler. Keep domain rules in a shared server-side module rather than duplicating decisions in UI components. The worker may be a separate process from the same release. A single organization with multiple departments/locations is the initial planning baseline; confirm future multi-tenant intent before schema finalization.
-
-Proposed stack to evaluate in CL-101: TypeScript browser and server code, React UI, a supported Node server framework, PostgreSQL, and a transactional database outbox. These are proposals, not installed dependencies. An existing organizational stack could be a better choice; record the decision and reasons rather than silently introducing a parallel architecture.
+Version 1.0.0 is a single-organization Django 5.2 LTS modular monolith. The earlier TypeScript/React/PostgreSQL proposal is superseded by D-016. Production dependencies are pinned in requirements.txt. Python 3.13 runs inside a non-root container; Waitress serves server-rendered HTML and WhiteNoise serves local static assets. Forms work without JavaScript; JavaScript adds clipboard, password visibility, search focus and small form conveniences.
 
 ```text
-Phone / desktop browser
-    ↓ HTTPS
-Web app + authenticated API
-    ├── identity / access
-    ├── people / skills / organization
-    ├── availability / leave
-    ├── Events / shifts / rule validation
-    ├── draft / publication / audit
-    ├── personal calendar feed
-    └── optional external Event module
-          ↓ transactions
-PostgreSQL: records + revisions + outbox + delivery state
-          ↓
-Worker ← scheduler
-    ├── operational email provider adapter
-    └── external Event import adapters
+Phone / desktop browser → HTTPS reverse proxy → Waitress / Django
+                                                 ├─ sessions, CSRF, scopes
+                                                 ├─ people, availability, Events
+                                                 ├─ drafts → publication → staff projection
+                                                 ├─ private token calendar feed
+                                                 └─ background worker → SMTP (optional)
+                                                      ↓
+                                               /data/crewline.sqlite3
+                                               /data/secret.key
 ```
 
-No browser communicates directly with privileged database credentials or mail-provider keys. An optional calendar subscription is a read-only token-authenticated endpoint, not an unauthenticated general staff API.
+## Identity and privacy
 
-## Module boundaries
+Django User accounts are separate from retained Employee records. Superusers administer everything. Staff managers (`is_staff`) require an Employee and department/location memberships; mixed-department Events are editable only when every department is in scope. Ordinary staff can read their own published assignments and permitted coworker names/times at their locations. Private contacts, manager notes, availability and time-off reasons stay out of team projections. Authentication, exported hours and mutation authorization are server-side.
 
-| Module | Owns | Public contracts |
-| --- | --- | --- |
-| Identity/access | Accounts, sessions, invitations, roles, scopes, access version | Current principal, permission predicates, revocation |
-| Organization/people | Departments, locations, staff, memberships, skills, lifecycle | Staff summaries and qualification checks |
-| Availability/leave | Recurring limits, exceptions, time-off lifecycle | Effective unavailable intervals and leave approval impact |
-| Scheduling | Event, coverage requirement, shift slot, assignment, validation | Candidate evaluation, rule issues, hour totals |
-| Publishing | Draft revision, staff-visible snapshot, publication diff | Immutable published revision and change events |
-| Communications | Outbox, email templates, delivery attempts, digest schedule | Idempotent deliverable creation and status |
-| Calendars | Feed tokens, calendar item UID/revision, client serialization | Own published shifts only |
-| Integrations | Module enablement, external source/item/import | Read-only external Event context and explicit conversion |
-| Audit/operations | Actor/action records, correlation, retention, health | Authorized history and operational diagnostics |
+Passwords use Django PBKDF2 with its current iteration policy, at least 15 characters, similarity/common-password validation and no shared default. Sessions are HttpOnly/SameSite Lax, HTTPS-secure by default, 12 hours, and rotate through Django login/password flows. Sign-in throttles hashed account and network identifiers. CSRF applies to every mutation; logout is POST. Invitations/recovery/email/calendar secrets are cryptographically random, SHA-256 hashed in AccessToken, expiring and revocable. Calendar tokens last one year and can be rotated sooner. Sensitive outbox bodies and transient invitation links in server sessions are Fernet encrypted using a key derived from the persistent app secret. The rest of the database contains personal data in plaintext and requires protected disks/backups.
 
-Modules call stable application services; they do not directly rewrite another module's tables without a documented transaction boundary. Disable optional integrations without breaking core planning.
+CSP limits scripts/fonts/connections to self and denies embedding; cookies, HSTS, no-store for private responses and safe application logging are configured. Proxy access/error logging must also redact bearer-token routes. Django uses same-origin Referrer-Policy so browser form submissions retain valid CSRF origins. `TRUST_PROXY=true` is appropriate only behind a private trusted proxy that overwrites forwarding headers. No SSO/MFA or general REST API is included.
 
-## Time and scheduling invariants
+## Event workflow and intervals
 
-1. Store exact start/end instants and the location's IANA timezone. Keep the original local-time intent where necessary for recurring availability. Never use the server's local timezone implicitly.
-2. Use half-open intervals `[start, end)`: adjacent shifts with no overlap do not double-book a person. A positive handover requires concurrent qualified people, not the same person's conflicting assignments.
-3. Validate active employment, location and department scope, required skills, qualification expiry policy, availability, approved leave, overlapping assignments, interlocation travel buffer and hour policy. Recheck inside the assignment/publication transaction.
-4. Staff can have multiple department/location memberships in the planned production schema. The prototype uses a simpler primary department field.
-5. Availability changes must expose existing assignment conflicts; they do not silently delete assignments. Time-off approvals need an explicit disposition of affected shifts, with manager impact preview.
-6. Validate coverage as a time-varying count of distinct qualified people, not merely filled slot counts. Split at every relevant interval boundary and compare against headcount/skill requirements for that segment.
-7. Sample rule interpretation: before-Event requirement begins `Event.start - preMinutes`; handover extends the outgoing coverage into the next phase; after-Event coverage lasts through `Event.end + postMinutes`. The prototype creates pre `[start-pre, start+handover)`, during `[start,end+handover)`, post `[end,end+post)`. Production rules need an accepted policy for Events with custom phase times and whether post duration includes handover. Record it before CL-403 completion.
-8. Calculate weekly hours from actual intersecting intervals in the configured workweek. Include cross-location commitments for limits; show filtered totals separately. Scheduled hours are not worked/payroll hours. Paid/unpaid break and overtime policy remains open.
-9. Overnight Events need real dates on both ends. Handle ambiguous and nonexistent local times at DST changes explicitly. Calendar serialization and emails use the same canonical instants.
-10. Database concurrency controls plus transaction-time validation prevent two separately valid edits from producing an invalid combined assignment. Application-only checks before a write are insufficient.
+An Event has one location/timezone and any number of department/skill coverage groups. Create an Event → choose staff for setup, Event and closing slots → review → publish. Setup defaults to 60 minutes before the Event through 15 minutes after its start; Event coverage runs from start through 15 minutes after finish; closing runs from finish through 30 minutes after finish. These handovers intentionally need different people where intervals overlap. Rules are configurable. Changing workspace coverage rules applies to later validation as well as new slots, so review existing drafts before publishing after a rules change.
 
-## Drafts and publication
+CoverageRequirement keeps required headcount distinct from the number of shift parts. An interval sweep checks that enough structural slots cover every required segment. Open positions are allowed at publication and visibly marked; gaps in the underlying coverage intervals block publication. Assigned people must satisfy every eligibility rule. Splitting a shift adds an open second part with a handover without inflating required headcount. Each assignment is at most 24 hours; Events can span up to 48 hours and require splitting long parts before assignment.
 
-Managers edit a draft revision. Staff read a stable published projection. A publish command includes the expected draft/revision version to detect stale edits. Inside one database transaction:
+Eligibility checks active employment, departments, location, skill, recurring/date unavailable intervals, approved all-day leave, overlapping assignments, inter-location travel buffers and employee weekly-hour limits. It considers drafts and current publications conservatively so an unpublished reassignment does not silently free a person's published commitment. Same-slot draft/published overlapping durations are unioned for limits. Hours are elapsed time, weeks start Monday in the workspace timezone, and DST ambiguous/nonexistent typed times are rejected explicitly. Availability/leave use workspace local time; Event displays use the Event location timezone. There is no breaks/payroll/legally configurable overtime engine.
 
-1. Authenticate current actor and scope.
-2. Lock or otherwise serialize affected assignments and validate expected versions.
-3. Re-run eligibility, conflict, hours and coverage rules.
-4. Compute changes from the previous published revision, including additions, removals, time/location/role changes and cancellations.
-5. Write an immutable publication/snapshot and an audit entry.
-6. Insert affected-recipient outbox records with stable idempotency keys.
-7. Commit. Delivery happens after commit; provider failure never rolls back a published schedule.
+## Transactions and publication
 
-Open-shift publication policy needs owner confirmation: the prototype permits publishing open slots but blocks rule errors. Coverage warnings vs blocking failures must be separately modeled rather than treating every issue identically. Do not let raw UI toggles override safety constraints without a permissioned reason and audit record.
+SQLite `IMMEDIATE` transactions serialize writers before validation; a Workspace epoch update documents the serialization boundary. Assignment, publication, requests and offboarding revalidate inside short atomic transactions. Event versions reject stale forms. This is intentionally one container on a local persistent disk, not multiple replicas. PostgreSQL requires a separate migration, locking review and concurrency suite.
 
-## Authentication, authorization and termination
+Managers edit Event/Shift drafts. Immutable Publication JSON records and the current snapshot supply staff/calendar views. Publish validates, records revision/audit and queues affected-person diffs atomically. Cancellation publishes a canceled revision. Time-off approval and termination reopen impacted current assignments with targeted snapshot updates while preserving unrelated drafts. Employment termination disables User, revokes tokens, removes sessions, closes pending requests and cancels pending sends. Historical revisions remain. Mail already accepted by a provider and calendar data already copied to a device cannot be recalled.
 
-Separate `user_account` from `employee_record`. A person can retain scheduling history after account access ends. Use secure HttpOnly session cookies, appropriate SameSite/CSRF protections, HTTPS, login throttling and recovery protections under the selected authentication design. Store session secrets securely; do not treat client storage as authoritative identity.
+## Mail and background work
 
-For every protected API request, export, websocket subscription if introduced, and calendar-feed request, check current employment/account state, organization, role and scopes. A cached role or long-lived signed token alone must not keep a terminated employee active; use an authoritative access-version/status lookup or equivalent revocation design.
+The Waitress process starts one bounded background thread, every 30 seconds. It creates unique recipient/week next-Monday–Sunday digests, then claims up to 20 queued jobs. Default weekly time is Sunday 17:00 workspace time; empty weeks get an explicit no-shifts message. An outage covering the entire configured send day currently misses that week's digest; catch-up scheduling is future work.
 
-Immediate termination transaction:
+SMTP is disabled without SMTP_HOST. Pending jobs persist and may send when enabled; review the queue before turning on a provider after a long disabled period. Fictional `.example`/`@example.com` recipients are always blocked. Outbox keys deduplicate creation. Provider failure or an abandoned sending lease becomes `review`; an administrator checks the provider before manually retrying. SMTP cannot guarantee exactly-once delivery across a crash after provider acceptance. No blind automatic resend hides that ambiguity. Sender verification, bounce processing and live transport acceptance remain operator/provider work.
 
-- Record effective end, actor/reason and prior state; update the authoritative account/employment access state so new requests fail immediately.
-- Revoke sessions, outstanding invitations, recovery/magic-link grants and calendar subscriptions. If an external identity provider requires asynchronous revocation, local access denial still takes effect in the transaction.
-- Close pending staff requests and prevent new assignments.
-- Preserve past worked/scheduled history and published revision references. Future assignments become reopened slots using append-only assignment/publication transitions, not destructive erasure of prior records.
-- For already published future assignments, record an explicit cancellation/reopen revision in the same service operation; notify authorized managers/replacements according to policy. Unpublished work remains draft.
-- Cancel/suppress pending communications to the inactive account. Workers recheck status immediately before delivery; record any already in-flight send that cannot be recalled.
-- Emit audit and outbox records. Make retries idempotent.
+## Calendar and future modules
 
-Rehire is a new access authorization, not restoration of old sessions or feed tokens. Retention and deletion rules need owner/legal policy; no retention duration is invented here. Previously downloaded calendar/email copies cannot be erased by revoking website access.
+The private feed contains only the token owner's published shifts, stable per-shift UID/revision and cancellations derived from retained publications. UTC timestamps and UTF-8 line folding follow iCalendar. Client refresh timing is controlled by Google/Apple/etc. Actual phone clients remain to be verified. No OAuth sync or remote deletion of downloaded entries is claimed.
 
-## Proposed API surface
-
-Routes are draft contracts for CL-101/102, not implemented endpoints. Only the preview server endpoints documented in README currently exist.
-
-| Method and route | Purpose / key guard |
-| --- | --- |
-| `GET /api/me` | Principal, own profile and permitted scopes; active account only |
-| `PATCH /api/me/profile` | Own contact changes; verified-address workflow |
-| `GET/POST /api/departments`, `/api/locations` | Admin or explicitly scoped management |
-| `GET/POST /api/staff` | Scope-safe directory and onboarding |
-| `PATCH /api/staff/:id` | Authorized profile/membership/skill changes; expected version |
-| `POST /api/staff/:id/terminate` | Explicit impact preview/version, immediate lifecycle transition |
-| `GET/POST /api/events` | Scoped Event list/create with timezone-aware date interval |
-| `PATCH /api/events/:id` | Versioned edit/cancel; separate draft vs publication |
-| `POST /api/events/:id/coverage` | Phase, headcount, department, required skill set |
-| `PATCH /api/shifts/:id` | Validated times/assignment; expected version |
-| `GET /api/shifts/:id/candidates` | Authorized candidate reasons and schedule conflicts |
-| `POST /api/shifts/:id/requests` | Active own request for eligible published open slot |
-| `POST /api/shift-requests/:id/approve` | Manager revalidation and atomic assignment |
-| `GET/POST /api/me/availability` | Own availability plus recurrence/exception schema |
-| `GET/POST /api/me/time-off` | Own request lifecycle; reasons private |
-| `POST /api/time-off/:id/decision` | Manager impact preview and affected-shift disposition |
-| `POST /api/schedules/:id/validate` | Rule issues for draft/expected version |
-| `POST /api/schedules/:id/publish` | Transactional publication and outbox |
-| `GET /api/me/schedule` | Own published shifts only |
-| `GET /api/team-schedule` | Published field allowlist and scope filtering |
-| `GET /api/scheduled-hours` | Draft/published choice, workweek, filtered and global totals |
-| `POST/DELETE /api/me/calendar-subscription` | Token create/rotate/revoke, secret shown only as needed |
-| `GET /calendar/:token.ics` | Read-only own published feed; no contact/absence details |
-| `GET/POST /api/modules/...` | Permissioned module settings and external source actions |
-| `GET /healthz`, `/readyz` | Non-sensitive liveness and dependency readiness |
-
-Use bounded pagination, input schema validation, field allowlists and idempotency keys for retriable commands. Error body should include a stable code, useful message, field errors and correlation ID, with no private unrelated person's data. Example codes: `STALE_REVISION`, `SHIFT_CONFLICT`, `SKILL_REQUIRED`, `OUTSIDE_AVAILABILITY`, `ACCOUNT_INACTIVE`, `COVERAGE_GAP`. Exact HTTP status and nondisclosure behavior must be made consistent in the API contract and tested.
-
-## Email and scheduler behavior
-
-Mail templates consume immutable publication differences. Both old and new assignees may need updates when an assignment moves. Staff never receive manager drafts. Queue entries have recipient, revision, kind, idempotency key, status and safe retry metadata. At delivery, confirm account/contact state and suppress obsolete/canceled work according to a documented policy. Provider event callbacks must be authenticated and idempotent.
-
-For weekly digest, define workweek and organization timezone; the sample UI uses Sunday 5pm Pacific, but this is an example. Digest idempotency key includes organization, recipient, upcoming week and message kind. Duplicate scheduler processes and DST transitions must not duplicate sends. Define empty schedules and holidays, late publication, digest regeneration and dead-letter/manual retry policies. A cron expression alone is insufficient evidence of reliable delivery.
-
-## Calendar and external Event integrations
-
-Start with standards-based read-only iCalendar subscriptions, not mandatory Google/Apple accounts. Use stable per-shift UID, sequence/revision and UTC or well-defined timezone serialization. New publication drives calendar revision; clients may poll slowly. Tokens are high entropy, hashed at rest, revocable and excluded from logs. Add-to-home-screen is separate from calendar subscription. Direct Google OAuth is optional later.
-
-External Events enter an isolated adapter and provenance store. Use source allowlists, safe outbound network policy, parser limits, rate limits, deduplication, timezone normalization and stale/error indicators. Prevent server-side requests to internal/private network addresses if remote feed URLs are accepted. Conversion into a staffed Event is explicit and auditable; subsequent source updates show differences rather than silently rescheduling staff.
-
-## Operations and release
-
-Production needs separate staging, TLS, migrations, safe secret injection, backups/restore, health/readiness, worker/scheduler monitoring and a deployment/rollback runbook. Database jobs and application version must be compatible across deploys. Introduce dependency locks when dependencies are added. Do not put real data on the unauthenticated preview server. See [Deployment](DEPLOYMENT.md) and M9 of the roadmap.
+External Event context is a manual manager-only note today. Future safe read-only adapters need explicit source allowlists, parser/network limits, provenance, stale-state indicators and explicit conversion into staffing; do not add arbitrary URL fetching to the current view. Module and multi-tenant registries are planned, not implemented.

@@ -14,3 +14,9 @@ Thumbs.db
 .local/
 backups/
 .claude/settings.local.json
+**/__pycache__/
+**/.local/
+**/staticfiles/
+*.pyc
+secret.key
+.venv/

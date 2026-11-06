@@ -4,7 +4,7 @@ Use stable IDs and explicit states: confirmed direction, accepted technical deci
 
 ## D-001 — Browser application served by a web server
 
-**State:** confirmed direction. Owner explicitly described a web-server application. GitHub stores source and coordination; runtime hosting is separate. A local sample-data preview server is implemented. Production hosting target remains open.
+**State:** confirmed direction. Owner explicitly described a web-server application. GitHub stores source and coordination; runtime hosting is separate. A local sample-data preview server is implemented. Hosting direction now confirmed: Docker at shifts.quigspace.com; see D-015.
 
 ## D-002 — Event terminology
 
@@ -20,7 +20,7 @@ Use stable IDs and explicit states: confirmed direction, accepted technical deci
 
 ## D-005 — Framework-neutral production planning; modular monolith recommended
 
-**State:** proposed. Prefer one codebase, relational database and background worker with clear domain boundaries. Suggested evaluation baseline: TypeScript, React, a Node framework and PostgreSQL. Reason: scheduling relies on shared transactional invariants and reliable outbox effects. No production packages or framework have been installed. Resolve under CL-101 before production scaffolding.
+**State:** superseded by D-016 for release 1.0. Original proposal: prefer one codebase, relational database and background worker with clear domain boundaries. Suggested evaluation baseline: TypeScript, React, a Node framework and PostgreSQL. Reason: scheduling relies on shared transactional invariants and reliable outbox effects. No production packages or framework have been installed. Resolve under CL-101 before production scaffolding.
 
 ## D-006 — Keep prototype as executable design reference
 
@@ -28,15 +28,15 @@ Use stable IDs and explicit states: confirmed direction, accepted technical deci
 
 ## D-007 — Explicit publication and server authority
 
-**State:** proposed architecture matching demonstrated draft behavior. Staff read published snapshots; managers edit drafts. All security and scheduling rules must be enforced server-side. Publication should atomically create revision, audit and outbox entries. The owner has not yet accepted all warning/blocking policies.
+**State:** accepted and implemented by D-017; defaults remain configurable. Original planning: Staff read published snapshots; managers edit drafts. All security and scheduling rules must be enforced server-side. Publication should atomically create revision, audit and outbox entries. The owner has not yet accepted all warning/blocking policies.
 
 ## D-008 — Record-preserving termination
 
-**State:** confirmed product direction; detailed implementation proposed. Revoke access while retaining records. The server design separates employee records from accounts. Active-session, invite, calendar-token and queued-delivery revocation are release requirements. Retention duration and rehire policy remain open.
+**State:** confirmed direction, core implemented; see D-017. Revoke access while retaining records. The server design separates employee records from accounts. Active-session, invite, calendar-token and queued-delivery revocation are release requirements. Retention duration and rehire policy remain open.
 
 ## D-009 — Calendar subscriptions first
 
-**State:** proposed. Private read-only iCalendar feed supports several calendar clients with fewer provider dependencies. One-time exports and phone home-screen shortcuts are separate flows. Direct Google OAuth is deferred pending need. Existing downloaded entries cannot be remotely erased. Actual client onboarding must be tested.
+**State:** accepted implementation, actual-client acceptance remains open. Private read-only iCalendar feed supports several calendar clients with fewer provider dependencies. One-time exports and phone home-screen shortcuts are separate flows. Direct Google OAuth is deferred pending need. Existing downloaded entries cannot be remotely erased. Actual client onboarding must be tested.
 
 ## D-010 — GitHub setup and permissions
 
@@ -50,7 +50,7 @@ Use stable IDs and explicit states: confirmed direction, accepted technical deci
 
 **State:** accepted for starter only. Preview build/server/default checks use Node built-ins and require no third-party packages. Optional browser verification uses a separately installed Playwright module. Introduce pinned dependencies and lockfile when the production stack is scaffolded.
 
-## Open decisions before or during foundation
+## Original foundation questions (current answers follow in D-015–019)
 
 | Question | Why it matters | Default proposal / task |
 | --- | --- | --- |
@@ -81,3 +81,24 @@ Do not turn all open questions into an immediate questionnaire. Resolve only tho
 ## D-014 — Verified connected source checkpoint
 
 **State:** completed CL-010 checkpoint, November 5, 2026. Canonical source is the private owner-supplied repository `https://github.com/jrquigley/gig`; default branch `main`. Initial source commit `5d97d5ad4acb3bd9c8388a839a6bb2bfe35b1e03` was pushed successfully, and the first Preview checks GitHub workflow passed. Local application build, 9 Node tests and browser smoke passed before upload. The historical standalone delivery remains in `outputs/crewline`; continue development in the connected checkout `outputs/gig` or a clean clone/worktree. No repository visibility, licensing, branch-protection or production-host settings were changed. Production choices remain open and CL-101 is next.
+
+
+## D-015 — Updated repository and host
+
+**State:** owner-confirmed, November 5, 2026. Current target is public https://github.com/jrquigley/crewline and https://shifts.quigspace.com on Docker. This supersedes D-010/D-014 as the current source location; they remain historical records. Preserve baseline history and existing repository visibility. Upload/merge authorized by the request. No server credentials were supplied and no production reload is claimed. No license/branch-protection settings changed.
+
+## D-016 — Small-team single-container implementation
+
+**State:** accepted implementation under the owner's instruction to build. Django 5.2 LTS, Waitress, server-rendered progressive enhancement, WhiteNoise and SQLite persistent /data. Supersedes D-005's unimplemented TypeScript/React/PostgreSQL proposal. Built-in authentication/forms/CSRF and a single container reduce setup burden while supporting the requested workflows. Short IMMEDIATE transactions serialize writers; actual contention is tested. One local-disk replica only. PostgreSQL/multi-tenancy need their own reviewed migration when scale requires them. Dependencies pinned; not a claim of future indefinite security.
+
+## D-017 — Publication, staffing and employment policy defaults
+
+**State:** implemented defaults, subject to owner pilot feedback. Managers publish explicit revisions; staff never read drafts. Open vacancies can publish, structural interval gaps cannot. Active qualification/availability/overlap/travel/weekly limits hard-block assignment/publication, with no silent override. Required phase headcount is separate from split-shift parts. Default pre/post/handover/travel are 60/30/15/30 minutes; Monday workweek, elapsed planning hours, no paid-break/payroll rules. Availability/leave use workspace timezone; Event local times use location timezone, typed ambiguous/nonexistent DST times are rejected. Offboarding revokes access immediately and reopens future assignments without deleting history; rehire/retention still require policy.
+
+## D-018 — Credentials, email and calendars
+
+**State:** implemented. No public signup/default password. First admin via private environment; staff invitations one-use, fake staff start with unusable passwords. Minimum password 15 characters. Own email change needs current password and new-address verification before sign-in changes. Tokens hashed, sensitive outbox bodies/session invite encrypted with persisted app secret. Keep DB/secret together. SMTP disabled until configured; fake recipients blocked. Durable deduplicated jobs, manual review for ambiguous SMTP outcomes; no exactly-once SMTP guarantee. Weekly Sunday 17:00 next Monday–Sunday, including explicit empty week; full-day outage catch-up pending. Private one-year revocable iCalendar feed first; OAuth deferred, actual clients unverified. Messages/calendar data already accepted/copied cannot be recalled.
+
+## D-019 — Design and remaining operations
+
+**State:** implemented UI with explicit validation limits. Taste palette/type/motion applied to the operational application, preserving the established Crewline product name. Marketing-screen rules are inapplicable to authenticated forms. Actual Playwright/axe/screenshots verified; Taste raw-CDP scripts did not finish, not reported as green. Hallmark inspected but not applied to an existing established design without a named redesign request. No Claude/independent review. Production TLS/provider/device tests, retention/recovery, backup restore, pilot feedback and future external modules remain roadmap gates. No commercial trademark clearance or project license is implied by the working name.
