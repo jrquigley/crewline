@@ -29,4 +29,4 @@ No production server credentials were provided. Do not claim to have reloaded th
 
 ## Implementation checkpoint
 
-Steps 1–5 are implemented with stated roadmap limits. Step 6 passed locally (56 Django tests, complete browser/axe and dependency audit) and on a6a4ed6 in GitHub Docker/UID/browser/persistence checks. Subsequent targeted-publication hardening is under the same full CI gate. Step 7 is in progress through release PR 1; see WORKLOG for final run evidence. Owner production reload and live provider/device acceptance remain separate.
+Steps 1–5 are implemented with stated roadmap limits. Step 6 passed locally (56 Django tests, complete browser/axe and dependency audit) and remotely on final application checkpoint 9577332, including GitHub Docker/UID/browser/persistence checks after targeted-publication hardening. Step 7 delivers source and current documentation through release PR 1; see its current merge/main state and WORKLOG for exact evidence. Owner production reload and live provider/device acceptance remain separate.

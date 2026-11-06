@@ -20,7 +20,7 @@ All implementation in this release was by Codex. No Claude/independent review oc
 
 ## Verification checkpoint
 
-Local: 56 Django tests passed, complete authenticated Playwright workflows passed, 72 responsive checks, zero automated axe violations on 16 screens, no known vulnerabilities in pinned runtime packages. Screenshots/reports in docs/evidence. Taste raw-CDP checker scripts did not complete on Windows; no passing Taste score is claimed. Exact remote CI/PR evidence is appended to WORKLOG after upload.
+Local: 56 Django tests passed, complete authenticated Playwright workflows passed, 72 responsive checks, zero automated axe violations on 16 screens, no known vulnerabilities in pinned runtime packages. Screenshots/reports in docs/evidence. Application checkpoint **95773324a99047d3ac086f639d325ae32872f9e2** passed the real Linux Docker/browser/axe/non-root/volume-replacement and Python 3.13 checks in [run 42156448715](https://github.com/jrquigley/crewline/actions/runs/42156448715). Delivery is through [PR #1](https://github.com/jrquigley/crewline/pull/1); inspect its current merge/main SHA. Final delivery update changes documentation only. Taste raw-CDP checker scripts did not complete on Windows; no passing Taste score is claimed. No owner production reload occurred.
 
 ## Next work and limitations
 

@@ -21,7 +21,7 @@ Collectstatic is required before rendering with the production hashed-asset mani
 - axe-core 4.14.0, WCAG 2 A/AA and 2.1 AA tags: no automated violations on 16 key manager/staff/login screens. Incomplete/manual rules remain; this does not certify full accessibility.
 - `pip-audit -r requirements.txt` found no known vulnerabilities in the nine pinned runtime packages. Result is a point-in-time advisory check, not a security guarantee.
 - Taste consistency/layout/performance scripts were attempted. Their raw Chrome/CDP transport did not complete on this Windows environment; they are explicitly **unverified**, not passing. See DESIGN-REVIEW.md. Actual browser workflow/axe/screenshot checks ran through Playwright instead.
-- Local Docker executable/engine was unavailable. Real Linux image build, startup, browser and volume replacement checks run in GitHub Actions; inspect the release PR/main workflow result for their actual outcome.
+- Local Docker executable/engine was unavailable. Real Linux image build, startup, browser/axe, UID 10001 and retained records/password after container replacement **passed in GitHub Actions** on application commit 9577332: [verified run](https://github.com/jrquigley/crewline/actions/runs/42156448715). That run also passed all 56 Django tests on Python 3.13 and the dependency audit. Inspect the final PR/main checks for subsequent documentation/merge revisions.
 
 ## Browser harness
 

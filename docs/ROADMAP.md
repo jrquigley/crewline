@@ -4,7 +4,7 @@ This is the shared execution plan for Codex and Claude. Update it with each mean
 
 ## Status and ownership
 
-`done`, `ready`, `planned`, `in-progress`, `review`, `blocked`, `deferred`.
+`done`, `partial`, `ready`, `planned`, `in-progress`, `review`, `blocked`, `deferred`.
 
 Release 1.0 implementation owner: **Codex**, branch `codex/CL-101-authenticated-app`. Statuses below reflect implemented code versus remaining operational/client acceptance; a partial task is not fully complete. Suggested branches and division of labor are in [Contributing](../CONTRIBUTING.md). Claim an owner and branch before starting. No work is currently assigned to Claude and no Claude review has been performed. Dates and effort estimates will be set after deployment constraints, staff scale and team availability are known; milestone order below is not a calendar promise.
 
